@@ -293,6 +293,113 @@ const getItemById = async (req, res) => {
     }
 }
 
+const editCategory = async (req, res) => {
+    try {
+        const {categoryId} = req.params 
+
+       
+        const category = await Category.findById(categoryId)
+
+        if(!category) {
+            return res.status(404).json({message : "category not found"})
+        }
+
+        const { name, image, description, taxApplicable, tax, taxType } = req.body;
+
+        // Update the category attributes if provided
+        if (name !== undefined) category.name = name;
+        if (image !== undefined) category.image = image;
+        if (description !== undefined) category.description = description;
+        if (taxApplicable !== undefined) category.taxApplicable = taxApplicable;
+        if (tax !== undefined) category.tax = tax;
+        if (taxType !== undefined) category.taxType = taxType;
+
+        // Save the updated category
+        await category.save();
+        res.status(200).json({message  : "category updated successfully",category})
+        
+    } catch(error) {
+        console.error('error while editing the categroy ', error)
+        res.status(500).json({message : "server error ", error})
+    }
+}
+
+const editSubCategory = async (req, res) => {
+    try {
+        const {subCategoryId} = req.params
+         
+        // get category with the given subcategory id 
+        const category = await Category.findOne({'subCategories._id' : subCategoryId})
+
+        const {name,image,description,tax,taxApplicable} = req.body
+
+        if(!category) {
+            return res.status(404).json({message : "sub category not found"})
+        }
+
+        const subCategory = await category.subCategories.id(subCategoryId)
+
+         // Update the sub-category attributes if provided
+         if (name !== undefined) subCategory.name = name;
+         if (image !== undefined) subCategory.image = image;
+         if (description !== undefined) subCategory.description = description;
+         if (taxApplicable !== undefined) subCategory.taxApplicable = taxApplicable;
+         if (tax !== undefined) subCategory.tax = tax;
+
+
+         await category.save()
+
+         res.status(200).json({message : "sub category updated successfully "})
+
+    } catch(error) {
+        console.error("error while updating sub category",error)
+        res.status(500).json({message : "server error ", error})
+    }
+}
+
+const editItem = async(req, res) => {
+    try {
+        const {itemId} = req.params 
+
+        const category = await Category.findOne({ 'subCategories.items._id': itemId })
+
+        if(!category) {
+            return res.status(404).json({message : "item not found"})
+        }
+
+        const { name, image, description, taxApplicable, tax, baseAmount, discount } = req.body;
+
+         // Find the sub-category that contains the item
+         const subCategory = category.subCategories.find(subCat => 
+            subCat.items.some(item => item._id.toString() === itemId)
+        );
+
+        // Find the item by ID
+        const item = subCategory.items.id(itemId);
+
+         // Update the item attributes if provided
+         if (name !== undefined) item.name = name
+         if (image !== undefined) item.image = image
+         if (description !== undefined) item.description = description
+         if (taxApplicable !== undefined) item.taxApplicable = taxApplicable
+         if (tax !== undefined) item.tax = tax
+         if (baseAmount !== undefined) item.baseAmount = baseAmount
+         if (discount !== undefined) item.discount = discount
+ 
+         // Calculate the total amount
+         item.totalAmount = item.baseAmount - (item.discount || 0)
+
+         await category.save()
+        
+         res.status(200).json({message : "item updated successfully",item})
+
+
+    }catch(error) {
+        console.error('error while updating item',error)
+        res.status(500).json({message : "server error",error})
+    }
+}
+
 
 module.exports = {
     createCategory,
@@ -306,5 +413,8 @@ module.exports = {
     getAllItems,
     getAllItemsByCategoryId,
     getAllItemsOfSubCategory,
-    getItemById
+    getItemById,
+    editCategory,
+    editSubCategory,
+    editItem
 }

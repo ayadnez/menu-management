@@ -10,7 +10,10 @@ const { createCategory,
     getAllItems,
     getAllItemsByCategoryId,
     getAllItemsOfSubCategory,
-    getItemById
+    getItemById,
+    editCategory,
+    editSubCategory,
+    editItem
 
 } = require('../controllers/user.controller')
 
@@ -33,5 +36,11 @@ router.get('/items',getAllItems)
 router.get('/items/:id', getAllItemsByCategoryId)
 router.get('/items/:categoryId/:subCategoryId',getAllItemsOfSubCategory)
 router.get('/item/:id',getItemById)
+
+// edit routes 
+router.put('/edit/:categoryId',editCategory)
+router.put('/edit/subcategory/:subCategoryId',editSubCategory)
+router.put('/edit/item/:itemId',editItem)
+
 
 module.exports = router;
