@@ -44,7 +44,7 @@ cd menu-management
     Create a `.env` file in the root directory and add the following variables:
 
     ```
-    PORT=4000
+    PORT=3000
     MONGODB_URI=mongodb://localhost:27017/ad-management
     JWT_SECRETKEY=your_jwt_secret_key
     REFRESH_KEY=your_refresh_secret_key
@@ -62,9 +62,12 @@ To start the server, run:
 
 ### Post Routes
 
+- `POST /register`: Register a new user.
+- `POST /login`: Login a user and returns an access token.
 - `POST /createCategory`: Create a new category.
 - `POST /subcategory/:categoryId`: Create a sub-category under a specific category.
 - `POST /createItem/:categoryId/:subCategoryId`: Create an item under a specific sub-category.
+- `POST /logout`: Logout a user and clear the refresh token.
 
 ### Get Routes
 

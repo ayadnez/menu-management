@@ -1,5 +1,74 @@
 const mongoose = require('mongoose') 
+const bcrypt = require('bcryptjs')
+const jwt = require('jsonwebtoken')
 const Category = require('../models/category.model')
+const User = require('../models/user.model')
+
+
+const register  = async(req, res) => {
+    const { userName, password } = req.body;
+  //  console.log("Incoming request:", req.body); // Log incoming request body for debugging
+    try {
+      // Check if user already exists
+      const existingUser = await User.findOne({ userName });
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists" });
+      }
+  
+      // Hash the password
+      const hashedPassword = await bcrypt.hash(password, 10);
+  
+      // Create a new user
+      const newUser = new User({
+        userName,
+        password: hashedPassword
+      });
+  
+      await newUser.save();
+  
+      res.status(201).json({ message: "User registration successful" });
+    } catch (error) {
+      console.error("Error while registering user:", error);
+      res.status(500).json({ message: "Error while registering user" });
+    }
+}
+
+const login = async(req , res) => {
+    const {userName,password} = req.body;
+
+    try {
+     // find the user by username
+      const user = await User.findOne({userName}) 
+      if (!user){
+        res.status(404).json({message:"user not found"});
+      }
+   // check if the password is correct 
+      const passwordMatch = await bcrypt.compare(password,user.password);
+  
+      if(!passwordMatch) {
+        res.status(401).json({message : "invalid credentials"})
+      }
+      // generate a jwt token 
+  
+      const payload = {
+        id : user._id,
+      }
+      const accessToken = jwt.sign(payload,process.env.JWT_SECRETKEY,{  expiresIn : "6h",});
+      const refreshToken = jwt.sign(payload,process.env.REFRESH_KEY,{expiresIn:'7d'});
+  
+      res.cookie('refreshToken',refreshToken,{
+        httpOnly:true,
+        secure : process.env.NODE_ENV === 'test',
+        sameSite :'strict',
+        maxAge :7*24*60*60*1000 // 7 days
+      });
+  
+      res.status(200).json({accessToken});
+    }catch(error){
+      console.log("error : ",error)
+      res.status(500).json({message:"error while logging in"})
+    }
+}
 
 const createCategory = async (req, res) => {
     
@@ -400,8 +469,36 @@ const editItem = async(req, res) => {
     }
 }
 
+const logout = async (req, res) => {
+
+    const { id } = req.user;
+
+    try {
+      const user = await User.findById(id);
+  
+      if (user) {
+        await user.save();
+      }
+  
+      res.clearCookie('refreshToken', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'test',
+        sameSite: 'Strict'
+      });
+  
+      res.status(200).json({ message: 'Logged out successfully' });
+
+    } catch (error) {
+
+      console.error('Error in logout controller:', error);
+      res.status(500).json({ message: 'Server error' });
+    }
+}
+
 
 module.exports = {
+    login,
+    register,
     createCategory,
     createSubCategory,
     createItem,

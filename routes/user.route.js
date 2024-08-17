@@ -13,14 +13,20 @@ const { createCategory,
     getItemById,
     editCategory,
     editSubCategory,
-    editItem
+    editItem,
+    register,
+    login,
+    logout
 
 } = require('../controllers/user.controller')
+const {authUser} = require('../middleware/auth')
 
-
-router.post('/createCategory',createCategory)
-router.post('/subcategory/:categoryId',createSubCategory)
-router.post('/createItem/:categoryId/:subCategoryId',createItem)
+router.post('/register',register)
+router.post('/login',login)
+router.post('/createCategory',authUser,createCategory)
+router.post('/subcategory/:categoryId',authUser,createSubCategory)
+router.post('/createItem/:categoryId/:subCategoryId',authUser,createItem)
+router.post('/logout',authUser,logout)
 
 // get categories routes
 router.get('/categories',getAllCategories)
@@ -38,9 +44,10 @@ router.get('/items/:categoryId/:subCategoryId',getAllItemsOfSubCategory)
 router.get('/item/:id',getItemById)
 
 // edit routes 
-router.put('/edit/:categoryId',editCategory)
-router.put('/edit/subcategory/:subCategoryId',editSubCategory)
-router.put('/edit/item/:itemId',editItem)
+router.put('/edit/:categoryId',authUser,editCategory)
+router.put('/edit/subcategory/:subCategoryId',authUser,editSubCategory)
+router.put('/edit/item/:itemId',authUser,editItem)
+
 
 
 module.exports = router;
