@@ -513,5 +513,6 @@ module.exports = {
     getItemById,
     editCategory,
     editSubCategory,
-    editItem
+    editItem,
+    logout
 }
